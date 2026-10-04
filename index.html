@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1D4E9E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="A mano">
+<meta name="author" content="Ángel Muñiz Pedraza">
+<title>A mano · humanizador de Ángel Muñiz</title>
+<meta name="description" content="A mano: humanizador de textos de Ángel Muñiz. Quita la huella de IA y puntúa el resultado.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Atkinson+Hyperlegible:wght@400;700&family=Mrs+Saint+Delafield&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cal:#F5F7FB; --superficie:#FFFFFF; --tinta:#13233F; --tinta-suave:#4A5A78;
+  --cobalto:#1D4E9E; --cobalto-hondo:#163C7A; --albero:#E0A526; --almagra:#A23A26;
+  --linea:#D3DCEA; --campo:#FFFFFF;
+  --serif:"Young Serif", Georgia, "Times New Roman", serif;
+  --sans:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --firma:"Mrs Saint Delafield", "Snell Roundhand", "Brush Script MT", cursive;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --cal:#0D182B; --superficie:#14223A; --tinta:#E7EDF7; --tinta-suave:#A3B1C9;
+    --cobalto:#7AA3EA; --cobalto-hondo:#9DBBF0; --albero:#F0BD4F; --almagra:#E2806A;
+    --linea:#2A3B5A; --campo:#101C31;
+  }
+}
+:root[data-theme="dark"]{
+  --cal:#0D182B; --superficie:#14223A; --tinta:#E7EDF7; --tinta-suave:#A3B1C9;
+  --cobalto:#7AA3EA; --cobalto-hondo:#9DBBF0; --albero:#F0BD4F; --almagra:#E2806A;
+  --linea:#2A3B5A; --campo:#101C31;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--cal);color:var(--tinta);font-family:var(--sans);font-size:17px;line-height:1.5;-webkit-text-size-adjust:100%}
+.marco{max-width:680px;margin:0 auto;padding:20px 18px 120px}
+
+/* Cabecera */
+.cabecera{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:end;margin:8px 0 26px}
+.azulejo{width:64px;height:64px;display:block}
+.titulo{font-family:var(--serif);font-weight:400;font-size:clamp(2.6rem,11vw,3.6rem);line-height:.95;margin:0;letter-spacing:-.01em}
+.subtitulo{margin:6px 0 0;color:var(--tinta-suave);font-size:.95rem}
+.subtitulo b{color:var(--tinta);font-weight:700}
+
+/* Bloques */
+.bloque{background:var(--superficie);border:1px solid var(--linea);border-radius:14px;padding:16px}
+.bloque + .bloque{margin-top:16px}
+.fila{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.etiqueta{font-weight:700;font-size:1rem;margin:0}
+.acciones{display:flex;gap:6px}
+.btn-texto{appearance:none;border:1px solid var(--linea);background:transparent;color:var(--cobalto);font:inherit;font-size:.92rem;font-weight:700;padding:7px 12px;border-radius:999px;cursor:pointer;min-height:36px}
+.btn-texto:hover{border-color:var(--cobalto)}
+textarea{width:100%;min-height:190px;resize:vertical;border:1px solid var(--linea);border-radius:10px;background:var(--campo);color:var(--tinta);font:inherit;font-size:16px;line-height:1.55;padding:12px 13px}
+textarea::placeholder{color:var(--tinta-suave)}
+#salida{min-height:220px}
+.contador{display:flex;justify-content:space-between;color:var(--tinta-suave);font-size:.85rem;margin-top:6px}
+.contador .aviso{color:var(--almagra)}
+
+/* Tono */
+.tonos{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px;border:0;padding:0}
+.tonos legend{font-weight:700;margin-bottom:8px;padding:0}
+.tono{position:relative}
+.tono input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.tono span{display:inline-block;padding:8px 14px;border-radius:999px;border:1px solid var(--linea);font-size:.95rem;color:var(--tinta)}
+.tono input:checked + span{background:var(--cobalto);border-color:var(--cobalto);color:var(--cal)}
+.tono input:focus-visible + span{outline:3px solid var(--albero);outline-offset:2px}
+details.extra{margin-top:12px}
+details.extra summary{cursor:pointer;color:var(--cobalto);font-weight:700;font-size:.95rem;padding:4px 0}
+details.extra textarea{min-height:80px;margin-top:8px}
+.campo-ia{display:block;margin-top:10px;font-size:.92rem;font-weight:700}
+.campo-ia input{display:block;width:100%;margin-top:4px;border:1px solid var(--linea);border-radius:10px;background:var(--campo);color:var(--tinta);font:inherit;font-size:16px;padding:10px 12px;font-weight:400}
+.campo-ia input:focus-visible{outline:3px solid var(--albero);outline-offset:2px}
+#panel-ia .acciones{margin-top:12px}
+#panel-ia[hidden]{display:none}
+.ayuda{color:var(--tinta-suave);font-size:.85rem;margin:6px 0 0}
+
+/* Botón principal fijo */
+.barra{position:fixed;left:0;right:0;bottom:0;padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--cal) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid var(--linea);z-index:5}
+.barra-int{max-width:680px;margin:0 auto;display:flex;gap:8px}
+.btn-principal{flex:1;appearance:none;border:0;border-radius:12px;background:var(--cobalto);color:#fff;font:inherit;font-weight:700;font-size:1.05rem;min-height:52px;cursor:pointer}
+:root[data-theme="dark"] .btn-principal{color:#0D182B}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn-principal{color:#0D182B}}
+.btn-principal:disabled{opacity:.55;cursor:default}
+.btn-parar{appearance:none;border:1px solid var(--almagra);background:transparent;color:var(--almagra);font:inherit;font-weight:700;border-radius:12px;min-height:52px;padding:0 18px;cursor:pointer}
+button:focus-visible,summary:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid var(--albero);outline-offset:2px}
+
+/* Resultado */
+.progreso{display:block;height:4px;background:var(--linea);border-radius:2px;overflow:hidden;margin:0 0 10px}
+.progreso[hidden]{display:none}
+.progreso i{display:block;height:100%;width:0;background:var(--albero);transition:width .3s}
+.btn-seguir{margin-top:10px;width:100%;appearance:none;border:0;background:var(--albero);color:#13233F;font:inherit;font-weight:700;border-radius:12px;min-height:48px;cursor:pointer}
+.btn-seguir[hidden]{display:none}
+#resultado[hidden]{display:none}
+.estado{color:var(--tinta-suave);font-size:.95rem;margin:0 0 10px;min-height:1.4em}
+.estado.error{color:var(--almagra)}
+.nota{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:center;margin:18px 0 14px}
+.cifra{font-family:var(--serif);font-size:3.4rem;line-height:1;grid-row:span 2}
+.cifra small{font-family:var(--sans);font-size:1rem;color:var(--tinta-suave)}
+.veredicto{font-weight:700;font-size:1.05rem}
+.veredicto.pasa{color:var(--cobalto)}
+.veredicto.revisar{color:var(--almagra)}
+.antes{color:var(--tinta-suave);font-size:.9rem}
+.mosaico{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:6px}
+@media (max-width:520px){.mosaico{grid-template-columns:repeat(3,1fr);gap:12px 10px}}
+.pieza{appearance:none;background:none;border:0;padding:0;font:inherit;color:inherit;text-align:center;cursor:pointer}
+.losa{display:block;position:relative;aspect-ratio:1;border:2px solid var(--cobalto);border-radius:6px;overflow:hidden;background:var(--campo)}
+.losa i{display:block;position:absolute;left:0;right:0;bottom:0;background:var(--cobalto);transition:height .6s cubic-bezier(.2,.8,.2,1)}
+.losa.flojo{border-color:var(--almagra)}
+.losa.flojo i{background:var(--almagra)}
+.losa::after{content:"";position:absolute;inset:22%;border:1.5px solid color-mix(in srgb,var(--albero) 70%,transparent);transform:rotate(45deg);border-radius:2px;pointer-events:none}
+.pieza b{display:block;font-size:1rem;margin-top:5px}
+.pieza span{display:block;font-size:.72rem;color:var(--tinta-suave);line-height:1.2}
+.pieza[aria-pressed="true"] .losa{outline:3px solid var(--albero);outline-offset:2px}
+.explica{margin:12px 0 0;font-size:.92rem;color:var(--tinta);background:color-mix(in srgb,var(--albero) 14%,transparent);border-radius:8px;padding:10px 12px}
+.senales{margin:10px 0 0;padding:0;list-style:none;font-size:.88rem;color:var(--tinta-suave)}
+.senales li{padding:3px 0}
+.senales li.cabeza{color:var(--tinta);font-weight:700;padding-top:8px}
+.senales q{color:var(--tinta)}
+.btn-pasada{margin-top:14px;width:100%;appearance:none;border:1.5px solid var(--cobalto);background:transparent;color:var(--cobalto);font:inherit;font-weight:700;border-radius:12px;min-height:48px;cursor:pointer}
+.btn-pasada:disabled{opacity:.5;cursor:default}
+
+/* Pie */
+.pie{margin-top:40px;text-align:center}
+.firma{font-family:var(--firma);font-size:3.2rem;line-height:1;color:var(--cobalto-hondo);margin:0}
+.pie p{margin:4px 0;color:var(--tinta-suave);font-size:.88rem}
+.pie a{color:var(--cobalto)}
+.honesto{max-width:46ch;margin:16px auto 0 !important;font-size:.82rem !important}
+
+@media (min-width:720px){
+  .marco{padding-top:40px}
+  textarea{min-height:240px}
+}
+@media (prefers-reduced-motion:reduce){.losa i{transition:none}}
+</style>
+</head>
+<body>
+<main class="marco">
+  <header class="cabecera">
+    <svg class="azulejo" viewBox="0 0 64 64" role="img" aria-label="Azulejo, sello de Ángel Muñiz">
+      <rect width="64" height="64" rx="8" fill="var(--cobalto)"/>
+      <rect x="14" y="14" width="36" height="36" fill="none" stroke="var(--cal)" stroke-width="3"/>
+      <rect x="14" y="14" width="36" height="36" fill="none" stroke="var(--cal)" stroke-width="3" transform="rotate(45 32 32)"/>
+      <circle cx="32" cy="32" r="7" fill="var(--albero)"/>
+      <circle cx="4" cy="4" r="9" fill="var(--albero)" opacity=".9"/>
+      <circle cx="60" cy="60" r="9" fill="var(--albero)" opacity=".9"/>
+    </svg>
+    <div>
+      <h1 class="titulo">A mano</h1>
+      <p class="subtitulo">El humanizador de <b>Ángel Muñiz</b></p>
+    </div>
+  </header>
+
+  <section class="bloque" aria-labelledby="l-entrada">
+    <div class="fila">
+      <h2 class="etiqueta" id="l-entrada">Tu texto</h2>
+      <div class="acciones">
+        <button class="btn-texto" id="pegar" type="button">Pegar</button>
+        <button class="btn-texto" id="borrar" type="button">Borrar</button>
+      </div>
+    </div>
+    <textarea id="entrada" placeholder="Pega aquí el texto que quieres que suene a persona." aria-labelledby="l-entrada"></textarea>
+    <div class="contador"><span id="cuenta">0 palabras</span><span id="limite"></span></div>
+
+    <fieldset class="tonos">
+      <legend>Tono</legend>
+      <label class="tono"><input type="radio" name="tono" value="natural" checked><span>Natural</span></label>
+      <label class="tono"><input type="radio" name="tono" value="profesional"><span>Profesional</span></label>
+      <label class="tono"><input type="radio" name="tono" value="cercano"><span>Cercano</span></label>
+    </fieldset>
+
+    <fieldset class="tonos">
+      <legend>Modo</legend>
+      <label class="tono"><input type="radio" name="modo" value="rapido" checked><span>Rápido</span></label>
+      <label class="tono"><input type="radio" name="modo" value="fondo"><span>A fondo</span></label>
+    </fieldset>
+    <p class="ayuda" id="ayuda-modo"></p>
+
+    <details class="extra">
+      <summary>Añadir algo que solo sabes tú</summary>
+      <textarea id="detalles" placeholder="Un dato, una anécdota, un nombre, una cifra real. Ej.: lo probé con 3 clientes en Sevilla en septiembre."></textarea>
+      <p class="ayuda">Es lo que más baja la huella: un detector no puede adivinar tus vivencias.</p>
+    </details>
+
+    <details class="extra" id="panel-ia" hidden>
+      <summary id="ia-titulo">Conectar IA (gratis, en tu Cloudflare)</summary>
+      <label class="campo-ia">Dirección del Worker<input id="ia-url" type="url" inputmode="url" autocomplete="off" placeholder="https://a-mano-ia.tu-cuenta.workers.dev"></label>
+      <label class="campo-ia">Clave de la app<input id="ia-clave" type="password" autocomplete="off"></label>
+      <div class="acciones">
+        <button class="btn-texto" id="ia-probar" type="button">Probar y guardar</button>
+        <button class="btn-texto" id="ia-quitar" type="button">Desconectar</button>
+      </div>
+      <p class="ayuda" id="ia-estado">Sin IA conectada la app solo limpia y puntúa. Las instrucciones para montar el Worker están en el README del repositorio.</p>
+    </details>
+  </section>
+
+  <section class="bloque" id="resultado" aria-labelledby="l-salida" hidden>
+    <div class="fila">
+      <h2 class="etiqueta" id="l-salida">Resultado</h2>
+      <div class="acciones"><button class="btn-texto" id="copiar" type="button">Copiar</button></div>
+    </div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+    <span class="progreso" id="progreso" hidden><i id="barra"></i></span>
+    <textarea id="salida" aria-labelledby="l-salida" placeholder="Aquí aparecerá tu texto reescrito."></textarea>
+
+    <div class="nota" id="nota" hidden>
+      <div class="cifra"><span id="total">0</span><small id="unidad">/100</small></div>
+      <div class="veredicto" id="veredicto"></div>
+      <div class="antes" id="antes"></div>
+    </div>
+    <div class="mosaico" id="mosaico" hidden></div>
+    <p class="explica" id="explica" hidden></p>
+    <ul class="senales" id="senales"></ul>
+    <button class="btn-seguir" id="seguir" type="button" hidden>Continuar</button>
+    <button class="btn-pasada" id="pasada" type="button" hidden>Dar otra pasada</button>
+  </section>
+
+  <footer class="pie">
+    <p class="firma">Ángel Muñiz</p>
+    <p>SEO, GEO y automatización. Hecho en Sevilla.</p>
+    <p><a href="https://github.com/angelmunizpedraza" target="_blank" rel="noopener">github.com/angelmunizpedraza</a></p>
+    <p class="honesto">Probado con Claude el 4 de octubre de 2026: 0 % en ZeroGPT. GPTZero reconoce las reescrituras hechas con IA aunque suenen humanas; si te importa ese detector, escribe tú parte del texto.</p>
+  </footer>
+</main>
+
+<div class="barra">
+  <div class="barra-int">
+    <button class="btn-principal" id="humanizar" type="button">Humanizar texto</button>
+    <button class="btn-parar" id="parar" type="button" hidden>Parar</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const entrada = $("entrada"), salida = $("salida"), detalles = $("detalles");
+  const TROZO = 4000;
+
+  /* ---------- Motor local: limpieza, troceo y puntuación ---------- */
+  const INV_ZW = /[\u200B\u200C\u200D\u2060\u00AD\uFEFF\u{E0000}-\u{E007F}]/gu;
+  const INV_SP = /[\u00A0\u202F\u2007\u2008\u2009\u200A]/g;
+  const TYPO = [[" — ", ", "], ["—", ", "], [" – ", " - "], ["–", "-"], ["\u201C", '"'], ["\u201D", '"'], ["\u2018", "'"], ["\u2019", "'"], ["…", "..."], ["•", "-"]];
+  // Solo se sustituye en automático lo que no puede cambiar el sentido; el resto lo reescribe Claude con contexto.
+  const LOCAL = {"es fundamental destacar que":"","cabe destacar que":"","en el mundo actual":"hoy","es crucial":"importa","sin duda":"","además,":"","asimismo,":"","no obstante,":"pero","en definitiva,":"","let that sink in":"","in today's fast-paced world":"today","moreover,":"also,","furthermore,":"also,"};
+  const LISTA = ["en el mundo actual","en un mundo cada vez más","es crucial","es fundamental destacar","cabe destacar","sin duda","sumergirse","desentrañar","tapiz","testimonio de","además,","asimismo,","no obstante,","en definitiva,","potenciar","apalancar","robusto","robusta","fluido","sin fisuras","revolucionar","game changer","déjalo reposar","aprovechar al máximo","a nivel de","impulsar","elevar","desbloquear","panorama","en el ámbito de","delve","leverage","robust","seamless","crucial","tapestry","testament to","moreover","furthermore","in today's fast-paced world","let that sink in","unlock","elevate","navigate","landscape","game-changer"];
+  const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const B = "(?<![\\p{L}\\p{N}_])", E = "(?![\\p{L}\\p{N}_])";
+  const wre = (k) => new RegExp(B + esc(k) + (/\p{L}$/u.test(k) ? E : ""), "giu");
+  const LOCAL_RE = Object.entries(LOCAL).map(([k, v]) => [wre(k), v]);
+  const LISTA_RE = LISTA.map(wre);
+  const FLAGS = [
+    [/[Nn]o (es|se trata) (solo|sólo) .+?, (es|sino) /gu, "«No es solo X, es Y»"],
+    [/[Nn]o solo .+? sino (también )?/gu, "«No solo X sino Y»"],
+    [/^¿[^?\s]{1,20}\?$/gmu, "Pregunta retórica suelta"],
+    [/[🚀🔥💡✨🎯]/gu, "Emoji típico de IA"],
+    [/(#[\p{L}\p{N}_]+\s*){4,}/gu, "Muro de hashtags"],
+    [/¿(Opiniones|Estáis de acuerdo|Quién más|Thoughts|Agree)\?/gu, "Cebo de interacción"],
+    [/[Aa]l final del día|[Hh]acer sentido|[Ee]n términos de/gu, "Calco del inglés"],
+    [/[\p{L}]+, [\p{L}]+ y [\p{L}]+\./gu, "Tríada de tres elementos"]
+  ];
+
+  const CONECT = /^[¿¡"]?(además|asimismo|por otro lado|por otra parte|en primer lugar|en segundo lugar|por último|finalmente|sin embargo|no obstante|en resumen|en conclusión|por lo tanto|por consiguiente|es decir|de hecho|en definitiva|cabe destacar|en este sentido|en este contexto|moreover|furthermore|additionally|however|in conclusion|overall|therefore|firstly|secondly|finally|in summary)(?![\p{L}])/iu;
+
+  function limpiar(t) {
+    const M = "\u0001";
+    let s = t.replace(INV_ZW, "").replace(INV_SP, " ").replace(/\p{Cf}/gu, "");
+    for (const [a, b] of TYPO) s = s.split(a).join(b);
+    for (const [re, v] of LOCAL_RE) s = s.replace(re, M + v);
+    s = s.replace(/,[ \t]*\u0001[ \t]*,[ \t]*/g, " ");
+    s = s.replace(/,[ \t]*\u0001[ \t]+(?=\p{Ll})/gu, " ");
+    // Mayúscula solo donde se quitó algo al inicio de frase
+    s = s.replace(/(^|(?<!\.)[.!?]["')»]?[ \t]+)\u0001[ \t,]*(\p{Ll})/gmu, (m, p, c) => p + c.toUpperCase());
+    s = s.replace(/\u0001/g, "");
+    s = s.replace(/[ \t]{2,}/g, " ").replace(/ +([,;:])/g, "$1").replace(/ +\.(?!\.)/g, ".").replace(/,[ \t]*,/g, ",")
+         .replace(/^[ \t]*,?[ \t]*/gm, "").replace(/((?<!\.)[.!?])[ \t]*,[ \t]*/g, "$1 ");
+    return s.trim();
+  }
+
+  function partirFrases(p) {
+    const out = [];
+    for (const s of p.split(/(?<=[.!?…]["'»)]?)(?=\s)/u)) {
+      if (s.length <= TROZO) { out.push(s); continue; }
+      let c = "";
+      for (const w of s.split(/(?=\s)/)) { if (c && c.length + w.length > TROZO) { out.push(c); c = ""; } c += w; }
+      if (c) out.push(c);
+    }
+    return out;
+  }
+  // Trocea por párrafos completos; un párrafo enorme se parte por frases. sep = lo que va delante de cada trozo.
+  function trocear(t) {
+    const piezas = [];
+    let actual = "", sepSig = "\n\n";
+    const volcar = () => { if (actual.trim()) piezas.push({ orig: actual.trim(), sep: piezas.length ? sepSig : "" }); actual = ""; sepSig = "\n\n"; };
+    const paras = t.replace(/\r\n?/g, "\n").split(/\n[ \t]*\n+/).filter((p) => p.trim());
+    for (const p of paras) {
+      if (p.length > TROZO) {
+        volcar();
+        for (const f of partirFrases(p)) {
+          if (actual && actual.length + f.length > TROZO) { volcar(); sepSig = " "; }
+          actual += f;
+        }
+        volcar();
+      } else {
+        if (actual && actual.length + p.length + 2 > TROZO) volcar();
+        actual += (actual ? "\n\n" : "") + p;
+      }
+    }
+    volcar();
+    return piezas;
+  }
+  function unir(piezas, i, txt, contiguo) {
+    let s = "";
+    for (let k = 0; k < piezas.length; k++) {
+      const p = piezas[k];
+      const o = k === i ? txt : p.out;
+      if (o == null || o === "") { if (contiguo) break; continue; }
+      s += (s ? p.sep : "") + o;
+    }
+    return s;
+  }
+
+  function puntuar(t) {
+    const frases = t.split(/(?<=[.!?])\s+|\n+/u).filter((s) => s.trim());
+    const palabras = t.match(/[\p{L}\p{N}_]+/gu) || [];
+    const n = Math.max(palabras.length, 1);
+    const lens = frases.map((s) => s.trim().split(/\s+/).length);
+    let variacion = 40;
+    if (lens.length > 1) {
+      const media = lens.reduce((a, b) => a + b, 0) / lens.length || 1;
+      const sd = Math.sqrt(lens.reduce((a, b) => a + (b - media) ** 2, 0) / lens.length);
+      variacion = Math.min(100, Math.floor((sd / media) * 200));
+    }
+    const digitos = (t.match(/\d/g) || []).length;
+    const mayus = (t.match(/(?<![\p{L}\p{N}_])\p{Lu}[\p{L}\p{N}_-]+/gu) || []).length;
+    const concrecion = Math.min(100, Math.floor(((digitos + mayus) / n) * 100 * 5));
+    let hits = 0;
+    for (const re of LISTA_RE) hits += (t.match(re) || []).length;
+    const muletillas = Math.max(0, 100 - Math.floor((hits / n) * 100 * 8));
+    const fp = (t.match(INV_ZW) || []).length + (t.match(INV_SP) || []).length + (t.match(/[—\u201C\u201D]/g) || []).length;
+    const huella = Math.max(0, 100 - Math.floor((fp / Math.max(t.length, 1)) * 1000 * 15));
+    let voz = 50;
+    if (new RegExp(B + "(yo|me|mi|he|tú|tu|tus|conmigo|I|my)" + E, "u").test(t)) voz += 20;
+    if (new RegExp(B + "(no|qué|pues|bueno|ojo|vale|así que|don't|isn't)" + E, "iu").test(t)) voz += 15;
+    const senales = [];
+    for (const [re, nombre] of FLAGS) {
+      re.lastIndex = 0;
+      const m = t.match(re);
+      if (m) { voz -= 10; senales.push([nombre, m[0].slice(0, 70)]); }
+    }
+    voz = Math.max(0, Math.min(100, voz));
+    const conect = frases.filter((s) => CONECT.test(s.trim())).length / Math.max(frases.length, 1);
+    const prim = frases.map((s) => ((s.trim().match(/^[\p{L}\p{N}]+/u) || [""])[0]).toLowerCase()).filter(Boolean);
+    const unicas = prim.length ? new Set(prim).size / prim.length : 1;
+    const transiciones = Math.max(0, Math.min(100, 100 - Math.round(conect * 200) - Math.round(Math.max(0, 0.75 - unicas) * 200)));
+    const checks = { variacion, concrecion, muletillas, huella, voz, transiciones };
+    const vals = Object.values(checks);
+    const total = Math.floor(0.6 * (vals.reduce((a, b) => a + b, 0) / vals.length) + 0.4 * Math.min(...vals));
+    return { checks, total, pasa: total >= 70 && Math.min(...vals) >= 55, senales, palabras: palabras.length };
+  }
+
+  /* ---------- Textos de la interfaz ---------- */
+  const NOMBRES = { variacion: "Variación", concrecion: "Concreción", muletillas: "Muletillas", huella: "Huella", voz: "Voz", transiciones: "Transiciones" };
+  const EXPLICA = {
+    variacion: "Variación: frases de longitudes distintas. Si todas miden lo mismo, suena a máquina.",
+    concrecion: "Concreción: cifras, nombres propios y lugares. Añade alguno real en «Añadir algo que solo sabes tú».",
+    muletillas: "Muletillas: vocabulario de plantilla tipo «además», «potenciar» o «es crucial».",
+    huella: "Huella: rayas largas, comillas curvas y caracteres invisibles que un teclado no escribe.",
+    voz: "Voz: primera persona, giros coloquiales y ausencia de estructuras de fórmula.",
+    transiciones: "Transiciones: frases que arrancan con conectores de manual (Por otro lado, Sin embargo, En resumen) o que empiezan todas igual."
+  };
+  const TONOS = {
+    natural: "natural y directo, como lo contaría alguien que domina el tema y no intenta impresionar",
+    profesional: "profesional pero humano: claro, seguro, sin rigidez corporativa ni frases hechas",
+    cercano: "cercano y conversacional, tuteando si encaja, con algún giro coloquial de España"
+  };
+  const ESTILOS = {
+    A: "Escribe como un profesional con oficio que redacta rápido: frases de longitud muy desigual, alguna de tres o cuatro palabras y alguna larga con un inciso entre paréntesis o un punto y coma.",
+    B: "Escribe como alguien que primero se lo ha contado de palabra a un colega y luego lo pasa a limpio: orden de ideas menos lineal, algún comentario propio breve y conectores de la lengua hablada (pues, o sea, la verdad, eso sí) sin abusar."
+  };
+  const ERRORES = {
+    not_granted: "No has dado permiso a esta app para usar Claude. Recarga la página y acepta el aviso.",
+    sampling_disabled: "Tu cuenta no permite que esta app use Claude.",
+    rate_limited: "Has llegado al límite de uso de la IA. Espera un rato y pulsa Continuar.",
+    session_expired: "Tu sesión de Claude ha caducado. Inicia sesión de nuevo y pulsa Continuar.",
+    empty_completion: "La respuesta llegó vacía. Pulsa Continuar.",
+    truncated: "La respuesta se cortó antes de terminar. Pulsa Continuar para repetir esa parte.",
+    worker_auth: "Tu Worker rechaza la clave o el origen. Revísalo en «Conectar IA».",
+    prompt_too_large: "Esa parte es demasiado larga para tu Worker. Pulsa Continuar."
+  };
+  const DEFINITIVOS = ["worker_auth", "not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed", "refused"];
+  const DURO = ["worker_auth", "cancelled", "rate_limited", "session_expired", "not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"];
+
+  /* ---------- Prompts ---------- */
+  const PROHIBIDO = "Prohibido: la raya larga (—), comillas curvas, la estructura «no es solo X, es Y», enumeraciones de tres elementos seguidos, preguntas retóricas sueltas, cierres con moraleja o resumen, preguntas para pedir interacción, emojis de cohete, fuego, bombilla o brillo, viñetas si el original no las tenía, y el vocabulario de plantilla (además, asimismo, no obstante, en definitiva, cabe destacar, es crucial, es fundamental, sin duda, en el mundo actual, potenciar, impulsar, elevar, robusto, sin fisuras, panorama, desbloquear, sumergirse, desentrañar, a nivel de, en términos de, al final del día) salvo que sea literal y necesario.";
+  const DETECTOR = "Los detectores miden lo previsible que es cada palabra, lo uniforme que es el ritmo y lo suaves que son las transiciones. Cuando haya dos opciones igual de naturales, elige la menos obvia, pero sin sinónimos raros ni palabras rebuscadas. No anuncies cada cambio de idea con un conector: a veces se salta sin más. No empieces dos frases seguidas igual.";
+  function reglas(tono, extra, ctx, estilo) {
+    return [
+      "Eres un editor que reescribe textos para que suenen escritos por una persona concreta y no por una IA.",
+      "Reglas obligatorias:",
+      "- Escribe en el mismo idioma que el texto original. Conserva el significado, los datos, las cifras, los enlaces y los nombres. No inventes hechos.",
+      "- Tono: " + TONOS[tono] + ".",
+      estilo ? "- " + ESTILOS[estilo] : "",
+      "- Longitud parecida a la original (más o menos un 15 %). Respeta los párrafos y los saltos de línea.",
+      "- Alterna frases cortas y largas de forma irregular. Que los párrafos no tengan todos la misma forma.",
+      "- " + DETECTOR,
+      "- " + PROHIBIDO,
+      "- Usa palabras corrientes y lo concreto antes que lo abstracto. Usa la primera persona si el original la usa o el tono lo permite.",
+      "- Que no parezca perfecto: algún arranque con «Y» o «Pero», alguna frase que se corta antes de lo esperado.",
+      extra ? "- Integra con naturalidad, sin forzar, estos detalles reales del autor: " + extra : "",
+      ctx ? "- " + ctx : "",
+      "Devuelve únicamente el texto reescrito. Sin título, sin comillas alrededor, sin explicaciones antes ni después."
+    ].filter(Boolean).join("\n");
+  }
+  function contexto(piezas, i) {
+    if (piezas.length < 2) return "";
+    let c = "Este fragmento es la parte " + (i + 1) + " de " + piezas.length + " de un texto más largo. No añadas introducción ni cierre propios; si empieza o termina a mitad de idea, respétalo.";
+    const prev = i > 0 ? (piezas[i - 1].out ?? piezas[i - 1].orig) : "";
+    if (prev) c += " Así termina la parte anterior, solo para que mantengas el hilo y no repitas giros (no la incluyas): «" + prev.slice(-400) + "»";
+    return c;
+  }
+  const pedir = (texto, tono, extra, ctx, estilo) => reglas(tono, extra, ctx, estilo) + "\n\nTEXTO:\n<<<\n" + texto + "\n>>>";
+  function pedirPasada(texto, tono, ctx, r) {
+    const flojo = Object.entries(r.checks).sort((a, b) => a[1] - b[1])[0][0];
+    const avisos = r.senales.map(([n, f]) => "- " + n + ": " + f).join("\n");
+    return reglas(tono, "", ctx, "A") +
+      "\n\nEste texto ya pasó una reescritura pero aún tiene huella de IA. Lo más flojo es: " + EXPLICA[flojo] +
+      (avisos ? "\nFragmentos con estructura de fórmula que debes reescribir:\n" + avisos : "") +
+      "\nReescríbelo arreglando eso, sin empeorar lo demás.\n\nTEXTO:\n<<<\n" + texto + "\n>>>";
+  }
+  function depurar(t) {
+    let s = t.replace(/^\s*```[a-z]*\n?|```\s*$/g, "").replace(/^\s*<<<\n?|\n?>>>\s*$/g, "");
+    s = s.replace(/^(aquí tienes|aquí está|claro|texto reescrito|here is|here's)[^\n]{0,80}:\s*\n+/i, "");
+    s = s.trim();
+    if (/^"[^"]*"$/.test(s) || /^«[^«»]*»$/.test(s)) s = s.slice(1, -1).trim();
+    return s;
+  }
+
+  /* ---------- Frases numeradas (para el juez y el corrector) ---------- */
+  function numerar(t) {
+    const segs = t.split(/((?<=[.!?…]["'»)]?)\s+)/u);
+    const idx = [], frases = [];
+    segs.forEach((s, k) => { if (k % 2 === 0 && s.trim()) { idx.push(k); frases.push(s); } });
+    return { segs, idx, frases };
+  }
+  const listar = (frases) => frases.map((f, j) => "[" + (j + 1) + "] " + f.replace(/\s+/g, " ")).join("\n");
+
+  /* ---------- IA: Claude dentro de Claude, tu Worker de Cloudflare fuera ---------- */
+  const samplePromesa = window.claude && window.claude.use ? window.claude.use("sample").catch(() => null) : Promise.resolve(null);
+  function leerIA() { try { const c = JSON.parse(localStorage.getItem("amano:ia") || "null"); return c && c.url && c.clave ? c : null; } catch (_) { return null; } }
+  function parsearJSON(t) {
+    try { return JSON.parse(t); } catch (_) {}
+    const f = t.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (f) { try { return JSON.parse(f[1]); } catch (_) {} }
+    const a = t.search(/[\[{]/), b = Math.max(t.lastIndexOf("}"), t.lastIndexOf("]"));
+    if (a >= 0 && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch (_) {} }
+    throw { code: "invalid_json", text: t };
+  }
+  function crearIAWorker(cfg) {
+    async function pedirWorker(input, opts, extra) {
+      let r;
+      try {
+        r = await fetch(cfg.url, {
+          method: "POST", signal: opts.signal,
+          headers: { "Content-Type": "application/json", "X-App-Key": cfg.clave },
+          body: JSON.stringify(Object.assign({ input, tier: opts.modelTier || "default" }, extra || {}))
+        });
+      } catch (e) {
+        if (opts.signal && opts.signal.aborted) throw { code: "cancelled" };
+        throw { code: "upstream_error" };
+      }
+      let d = {};
+      try { d = await r.json(); } catch (_) {}
+      if (r.status === 401 || r.status === 403) throw { code: "worker_auth" };
+      if (r.status === 429) throw { code: "rate_limited" };
+      if (r.status === 413) throw { code: "prompt_too_large" };
+      if (!r.ok) throw { code: "upstream_error" };
+      return d;
+    }
+    const ia = async (input, opts = {}) => {
+      const d = await pedirWorker(input, opts);
+      const text = String(d.text || "").trim();
+      if (!text) throw { code: "empty_completion" };
+      if (opts.onText) opts.onText({ text, delta: text });
+      return { text, truncated: false, modelTierApplied: opts.modelTier || "default" };
+    };
+    ia.json = async (input, opts = {}) => {
+      const d = await pedirWorker(typeof input === "string" ? input + "\n\nResponde solo con el JSON, sin texto antes ni después." : input, opts);
+      return parsearJSON(String(d.text || ""));
+    };
+    ia.probar = () => pedirWorker("ping", {}, { ping: true });
+    return ia;
+  }
+  async function obtenerIA() {
+    const s = await samplePromesa;
+    if (s) return s;
+    const c = leerIA();
+    return c ? crearIAWorker(c) : null;
+  }
+  samplePromesa.then((s) => {
+    if (s) return;
+    const panel = $("panel-ia"); panel.hidden = false;
+    const c = leerIA();
+    if (c) { $("ia-url").value = c.url; $("ia-titulo").textContent = "IA conectada (tu Cloudflare)"; $("ia-estado").textContent = "Conectada. Puedes cambiar la dirección o la clave cuando quieras."; }
+    else panel.open = true;
+  });
+  $("ia-probar").addEventListener("click", async () => {
+    const url = $("ia-url").value.trim(), clave = $("ia-clave").value.trim() || (leerIA() || {}).clave || "";
+    const e = $("ia-estado");
+    if (!/^https:\/\/[^\s]+$/.test(url) || !clave) { e.textContent = "Pon la dirección https del Worker y la clave de la app."; return; }
+    e.textContent = "Probando la conexión...";
+    try {
+      await crearIAWorker({ url, clave }).probar();
+      try { localStorage.setItem("amano:ia", JSON.stringify({ url, clave })); } catch (_) {}
+      $("ia-clave").value = "";
+      $("ia-titulo").textContent = "IA conectada (tu Cloudflare)";
+      e.textContent = "Conectada y guardada en este móvil. Ya puedes humanizar.";
+    } catch (err) {
+      e.textContent = err && err.code === "worker_auth" ? "El Worker responde, pero la clave o el origen no coinciden. Revisa APP_KEY y ALLOWED_ORIGINS." : "No hay respuesta en esa dirección. Comprueba que el Worker está desplegado.";
+    }
+  });
+  $("ia-quitar").addEventListener("click", () => {
+    try { localStorage.removeItem("amano:ia"); } catch (_) {}
+    $("ia-url").value = ""; $("ia-clave").value = "";
+    $("ia-titulo").textContent = "Conectar IA (gratis, en tu Cloudflare)";
+    $("ia-estado").textContent = "Desconectada. Sin IA la app solo limpia y puntúa.";
+  });
+
+  /* ---------- Estado ---------- */
+  const controles = new Set();
+  let ultima = null, puntuacionAntes = null, ocupado = false, trabajo = null, piezaActiva = null, juez = null;
+
+  try { const g = localStorage.getItem("amano:borrador"); if (g) entrada.value = g; } catch (_) {}
+  try { const m = localStorage.getItem("amano:modo2"); if (m) { const r = document.querySelector('input[name="modo"][value="' + m + '"]'); if (r) r.checked = true; } } catch (_) {}
+  const modo = () => document.querySelector('input[name="modo"]:checked').value;
+  const AYUDA = {
+    fondo: "Dos redactores a la vez, un juez frase a frase y un corrector. Más lento; úsalo en textos largos o delicados.",
+    rapido: "El más veloz: dos partes a la vez y repaso automático si la nota sale floja. Sin límite de tamaño."
+  };
+  const ponerAyuda = () => { $("ayuda-modo").textContent = AYUDA[modo()]; };
+  document.querySelectorAll('input[name="modo"]').forEach((r) => r.addEventListener("change", () => { ponerAyuda(); try { localStorage.setItem("amano:modo2", modo()); } catch (_) {} }));
+  ponerAyuda();
+
+  function contar() {
+    const t = entrada.value;
+    const p = (t.match(/[\p{L}\p{N}_]+/gu) || []).length;
+    $("cuenta").textContent = p === 1 ? "1 palabra" : p.toLocaleString("es") + " palabras";
+    const partes = t.length > TROZO ? trocear(t).length : 1;
+    $("limite").textContent = !t.length ? "" : partes > 1 ? "Se hará en " + partes + " partes" : t.length.toLocaleString("es") + " caracteres";
+    try { localStorage.setItem("amano:borrador", t); } catch (_) {}
+  }
+  let tCont;
+  entrada.addEventListener("input", () => { clearTimeout(tCont); tCont = setTimeout(contar, 200); });
+  contar();
+
+  const tono = () => document.querySelector('input[name="tono"]:checked').value;
+  function estado(msg, error) { const e = $("estado"); e.textContent = msg || ""; e.classList.toggle("error", !!error); }
+  function progreso(f) { $("progreso").hidden = f == null; if (f != null) $("barra").style.width = Math.round(f * 100) + "%"; }
+  function ocupar(si) {
+    ocupado = si;
+    $("humanizar").disabled = si; $("pasada").disabled = si; $("seguir").disabled = si;
+    $("humanizar").textContent = si ? "Reescribiendo..." : "Humanizar texto";
+    $("parar").hidden = !si;
+    salida.readOnly = si;
+  }
+
+  /* ---------- Pintar resultado ---------- */
+  function pintar(r) {
+    ultima = r;
+    $("nota").hidden = false; $("mosaico").hidden = false;
+    const conJuez = juez && juez.ia != null;
+    $("total").textContent = r.total;
+    $("unidad").textContent = "/100";
+    const pasa = r.pasa && (!conJuez || juez.ia <= 20);
+    const v = $("veredicto");
+    v.textContent = pasa ? "Suena a persona" : "Aún suena a plantilla";
+    v.className = "veredicto " + (pasa ? "pasa" : "revisar");
+    const lineas = [];
+    if (conJuez) lineas.push("Juez estilo ZeroGPT: " + juez.ia + " % de IA.");
+    if (puntuacionAntes != null) lineas.push("Tu texto original sacaba " + puntuacionAntes + "/100.");
+    const piezas = salida.value.length > TROZO ? trocear(salida.value) : [];
+    if (piezas.length > 1) lineas.push(piezas.filter((p) => puntuar(p.orig).pasa).length + " de " + piezas.length + " partes aprueban las señales locales.");
+    if (r.palabras < 40) lineas.push("Con tan pocas palabras la nota orienta poco.");
+    $("antes").textContent = lineas.join(" ");
+    const m = $("mosaico");
+    m.innerHTML = "";
+    for (const [k, val] of Object.entries(r.checks)) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "pieza"; b.setAttribute("aria-pressed", piezaActiva === k ? "true" : "false");
+      b.setAttribute("aria-label", NOMBRES[k] + " " + val + " de 100");
+      b.innerHTML = '<span class="losa' + (val < 55 ? " flojo" : "") + '"><i style="height:0%"></i></span><b>' + val + "</b><span>" + NOMBRES[k] + "</span>";
+      b.addEventListener("click", () => { piezaActiva = piezaActiva === k ? null : k; pintar(ultima); });
+      m.appendChild(b);
+      requestAnimationFrame(() => { b.querySelector("i").style.height = val + "%"; });
+    }
+    const e = $("explica");
+    const flojo = Object.entries(r.checks).sort((a, b) => a[1] - b[1])[0];
+    if (piezaActiva) { e.hidden = false; e.textContent = EXPLICA[piezaActiva]; }
+    else if (flojo[1] < 55) { e.hidden = false; e.textContent = "Lo más flojo. " + EXPLICA[flojo[0]]; }
+    else e.hidden = true;
+    const ul = $("senales"); ul.innerHTML = "";
+    const item = (txt, cita, cls) => {
+      const li = document.createElement("li");
+      if (cls) li.className = cls;
+      li.textContent = txt;
+      if (cita) { const q = document.createElement("q"); q.textContent = cita; li.appendChild(q); }
+      ul.appendChild(li);
+    };
+    for (const [n, f] of r.senales.slice(0, 8)) item(n + ": ", f);
+    if (conJuez && juez.dudosas.length) {
+      item("Las frases más marcadas. Reescríbelas tú con tus palabras:", null, "cabeza");
+      for (const f of juez.dudosas.slice(0, 6)) item("", f.slice(0, 140));
+    }
+    $("pasada").hidden = false;
+    $("pasada").textContent = pasa ? "Dar otra pasada" : "Dar otra pasada para arreglarlo";
+  }
+  const pintarSalida = () => { if (salida.value.trim()) pintar(puntuar(salida.value)); };
+
+  /* ---------- Agentes ---------- */
+  function control() {
+    if (trabajo && trabajo.detener) throw { code: "cancelled" };
+    const c = new AbortController(); controles.add(c); return c;
+  }
+  const soltar = (c) => controles.delete(c);
+
+  // Redactor: devuelve texto limpio. preview = muestra la escritura en directo.
+  async function redactar(sample, prompt, i, preview, etiqueta, tier) {
+    const c = control();
+    const opts = { signal: c.signal, cache: false };
+    if (tier) opts.modelTier = tier;
+    if (preview) opts.onText = ({ text }) => {
+      if (etiqueta) estado(etiqueta);
+      salida.value = unir(trabajo.piezas, i, depurar(text), trabajo.modo === "nuevo");
+      if (trabajo.modo === "nuevo") salida.scrollTop = salida.scrollHeight;
+    };
+    try {
+      const res = await sample(prompt, opts);
+      if (res.truncated) throw { code: "truncated" };
+      const limpio = limpiar(depurar(res.text));
+      if (!limpio) throw { code: "empty_completion" };
+      return limpio;
+    } finally { soltar(c); }
+  }
+
+  // Juez: hace de detector frase a frase. Devuelve [{ia, frases:[{n, motivo}]}] o null si no puede.
+  async function juzgar(sample, candidatos) {
+    const c = control();
+    const bloques = candidatos.map((t, k) => "CANDIDATO " + (k + 1) + ":\n" + listar(numerar(t).frases)).join("\n\n");
+    const prompt = [
+      "Actúa como un detector de texto generado por IA del estilo de ZeroGPT, GPTZero y Originality. Sé estricto, como ellos.",
+      "Señales que delatan IA: palabras muy previsibles una detrás de otra, ritmo uniforme, transiciones suaves y anunciadas, estructuras de plantilla, frases que empiezan igual, tono neutro sin rastro de una persona concreta, coherencia demasiado pulida y vocabulario de manual.",
+      "Para cada candidato estima la probabilidad de que un detector lo marque como IA (0 a 100) y lista las frases concretas que marcaría, con un motivo de pocas palabras.",
+      'Responde solo con JSON con esta forma: {"candidatos":[{"ia":12,"frases":[{"n":3,"motivo":"transición de manual"}]}]}. Un objeto por candidato, en el mismo orden.',
+      "", bloques
+    ].join("\n");
+    try {
+      const r = await sample.json(prompt, { signal: c.signal, modelTier: "quick", cache: false });
+      const lista = r && Array.isArray(r.candidatos) ? r.candidatos : null;
+      if (!lista || lista.length < candidatos.length) return null;
+      return lista.slice(0, candidatos.length).map((x, k) => {
+        const max = numerar(candidatos[k]).frases.length;
+        const ia = Math.max(0, Math.min(100, Math.round(Number(x && x.ia))));
+        const frases = (Array.isArray(x && x.frases) ? x.frases : [])
+          .map((f) => ({ n: Math.round(Number(f && f.n)), motivo: String((f && f.motivo) || "").slice(0, 80) }))
+          .filter((f) => f.n >= 1 && f.n <= max);
+        return { ia: Number.isFinite(ia) ? ia : 50, frases };
+      });
+    } catch (e) {
+      if (e && DURO.includes(e.code)) throw e;
+      return null;
+    } finally { soltar(c); }
+  }
+
+  // Corrector: reescribe solo las frases marcadas, viendo el texto entero.
+  async function corregir(sample, texto, dudosas, tonoSel, ctx) {
+    const c = control();
+    const num = numerar(texto);
+    const prompt = [
+      "Eres el corrector final de un texto que debe sonar escrito por una persona. Un detector de IA ha marcado algunas frases. Reescribe SOLO esas frases.",
+      "- Mismo idioma y tono (" + TONOS[tonoSel] + "). Conserva el sentido, los datos y los nombres. Cada frase nueva tiene que encajar con la anterior y la siguiente.",
+      "- Puedes cambiar el orden interno, partir una frase en dos o unir ideas, pero no toques las frases que no están marcadas.",
+      "- " + DETECTOR,
+      "- " + PROHIBIDO,
+      ctx ? "- " + ctx : "",
+      'Responde solo con JSON: {"frases":[{"n":3,"texto":"frase nueva"}]}.',
+      "", "TEXTO COMPLETO NUMERADO:", listar(num.frases),
+      "", "FRASES MARCADAS:", dudosas.map((d) => "[" + d.n + "] " + (d.motivo || "suena a IA")).join("\n")
+    ].filter((l) => l !== null).join("\n");
+    try {
+      const r = await sample.json(prompt, { signal: c.signal, modelTier: "quick", cache: false });
+      const lista = r && Array.isArray(r.frases) ? r.frases : [];
+      let cambios = 0;
+      for (const f of lista) {
+        const n = Math.round(Number(f && f.n));
+        const t = String((f && f.texto) || "").replace(/^\s*\[\d+\]\s*/, "").trim();
+        if (n >= 1 && n <= num.frases.length && t) { num.segs[num.idx[n - 1]] = t; cambios++; }
+      }
+      return cambios ? limpiar(num.segs.join("")) : texto;
+    } catch (e) {
+      if (e && DURO.includes(e.code)) throw e;
+      return texto;
+    } finally { soltar(c); }
+  }
+
+  // Selección guiada por detector + rondas de corrección.
+  async function refinar(sample, t, p, i, etiqueta, ctx, candidatos) {
+    estado(etiqueta + "el juez revisa frase a frase...");
+    const veredictos = await juzgar(sample, candidatos);
+    let mejor = 0, nota = -1;
+    candidatos.forEach((c, k) => {
+      const loc = puntuar(c).total;
+      const j = veredictos && veredictos[k];
+      const s = j ? 0.6 * (100 - j.ia) + 0.4 * loc : loc;
+      if (s > nota) { nota = s; mejor = k; }
+    });
+    let texto = candidatos[mejor];
+    let v = veredictos ? veredictos[mejor] : null;
+    p.out = texto; salida.value = unir(t.piezas);
+    for (let ronda = 1; ronda <= 1; ronda++) {
+      const loc = puntuar(texto);
+      if (loc.pasa && (!v || v.ia <= 20)) break;
+      if (v && v.frases.length) {
+        estado(etiqueta + "corrigiendo " + v.frases.length + (v.frases.length === 1 ? " frase marcada" : " frases marcadas") + "...");
+        texto = await corregir(sample, texto, v.frases, t.tono, ctx);
+      } else {
+        estado(etiqueta + "repasando lo flojo...");
+        texto = await redactar(sample, pedirPasada(texto, t.tono, ctx, loc), i, false, "", "quick");
+      }
+      p.out = texto; salida.value = unir(t.piezas, -1, null, t.modo === "nuevo");
+      estado(etiqueta + "el juez vuelve a revisar...");
+      const vv = await juzgar(sample, [texto]);
+      v = vv ? vv[0] : null;
+    }
+    p.ia = v ? v.ia : null;
+    const fr = numerar(texto).frases;
+    p.dudosas = v ? v.frases.map((f) => fr[f.n - 1]).filter(Boolean) : [];
+  }
+
+  async function procesarPieza(sample, t, i, etiqueta) {
+    const p = t.piezas[i];
+    const ctx = contexto(t.piezas, i);
+    const extra = i === 0 && t.modo === "nuevo" ? t.extra : "";
+    if (t.modo === "pasada") return refinar(sample, t, p, i, etiqueta, ctx, [p.out]);
+    if (t.estrategia === "rapido") {
+      p.out = await redactar(sample, pedir(p.orig, t.tono, extra, ctx, "A"), i, t.preview, etiqueta + "escribiendo...", "quick");
+      const r = puntuar(p.out);
+      if (!r.pasa && r.palabras >= 40) {
+        if (t.preview) estado(etiqueta + "repasando lo flojo...");
+        p.out = await redactar(sample, pedirPasada(p.out, t.tono, ctx, r), i, false, "", "quick");
+      }
+      p.ia = null; p.dudosas = [];
+      return;
+    }
+    estado(etiqueta + "dos redactores escriben en paralelo...");
+    const res = await Promise.allSettled([
+      redactar(sample, pedir(p.orig, t.tono, extra, ctx, "A"), i, true, etiqueta + "dos redactores escriben en paralelo..."),
+      redactar(sample, pedir(p.orig, t.tono, extra, ctx, "B"), i, false, "", "quick")
+    ]);
+    const ok = res.filter((r) => r.status === "fulfilled").map((r) => r.value);
+    if (!ok.length) throw res[0].reason;
+    const duro = res.find((r) => r.status === "rejected" && r.reason && DURO.includes(r.reason.code));
+    if (duro && duro.reason.code === "cancelled") throw duro.reason;
+    await refinar(sample, t, p, i, etiqueta, ctx, ok);
+  }
+
+  function resumenJuez(piezas) {
+    const con = piezas.filter((p) => p.ia != null && p.out);
+    if (!con.length) return null;
+    const peso = con.reduce((a, p) => a + p.out.length, 0) || 1;
+    const ia = Math.round(con.reduce((a, p) => a + p.ia * p.out.length, 0) / peso);
+    return { ia, dudosas: con.flatMap((p) => p.dudosas || []) };
+  }
+
+  async function procesar() {
+    const t = trabajo;
+    t.detener = false;
+    ocupar(true);
+    $("seguir").hidden = true;
+    const sample = await obtenerIA();
+    if (!sample) {
+      ocupar(false);
+      t.piezas.forEach((p) => { if (p.out == null) p.out = limpiar(p.orig); });
+      salida.value = unir(t.piezas);
+      trabajo = null; juez = null;
+      estado("No hay IA conectada: he aplicado solo la limpieza automática. Conéctala en «Conectar IA».", true);
+      const panel = $("panel-ia"); panel.hidden = false; panel.open = true;
+      pintarSalida();
+      return;
+    }
+    const N = t.cola.length;
+    const pendientes = t.cola.filter((i) => !t.piezas[i].hecho);
+    let hechos = N - pendientes.length, siguiente = 0, fallo = null;
+    const conc = t.estrategia === "rapido" && t.modo === "nuevo" && pendientes.length > 1 ? 2 : 1;
+    t.preview = conc === 1;
+    t.hechos = hechos;
+    const trabajador = async () => {
+      while (!fallo && siguiente < pendientes.length) {
+        const i = pendientes[siguiente++];
+        const etiqueta = conc > 1 ? "Reescribiendo dos partes a la vez (" + hechos + " de " + N + " listas). "
+          : N > 1 ? "Parte " + (t.cola.indexOf(i) + 1) + " de " + N + ": " : "";
+        if (conc > 1) estado(etiqueta);
+        try {
+          await procesarPieza(sample, t, i, etiqueta);
+          t.piezas[i].hecho = true;
+          t.hechos = ++hechos;
+          progreso(N > 1 ? hechos / N : null);
+          salida.value = unir(t.piezas, -1, null, t.modo === "nuevo");
+        } catch (e) {
+          if (!fallo || (fallo.code === "cancelled" && e && e.code !== "cancelled")) fallo = e;
+          controles.forEach((c) => c.abort());
+        }
+      }
+    };
+    try {
+      progreso(N > 1 ? hechos / N : null);
+      await Promise.all(Array.from({ length: conc }, trabajador));
+      if (fallo) throw fallo;
+      progreso(null);
+      trabajo = null;
+      salida.value = unir(t.piezas);
+      estado("Listo. Puedes retocarlo aquí mismo antes de copiarlo.");
+    } catch (e) {
+      const code = (e && e.code) || "upstream_error";
+      salida.value = unir(t.piezas, -1, null, t.modo === "nuevo");
+      const donde = N > 1 ? " Van " + t.hechos + " de " + N + " partes hechas." : "";
+      if (code === "cancelled") {
+        estado("Parado." + donde + " Pulsa Continuar para seguir.");
+        $("seguir").hidden = false;
+      } else if (code === "refused") {
+        estado("Claude no ha querido reescribir esta parte." + donde + " Cambia ese fragmento y vuelve a empezar.", true);
+        trabajo = null;
+      } else {
+        estado((ERRORES[code] || "Se cortó la conexión con la IA. Pulsa Continuar.") + donde, true);
+        if (DEFINITIVOS.includes(code)) trabajo = null; else $("seguir").hidden = false;
+      }
+    } finally {
+      ocupar(false);
+      juez = resumenJuez(t.piezas);
+      pintarSalida();
+    }
+  }
+
+  /* ---------- Botones ---------- */
+  $("humanizar").addEventListener("click", () => {
+    if (ocupado) return;
+    const tx = entrada.value.trim();
+    if (!tx) { entrada.focus(); entrada.placeholder = "Primero pega aquí un texto."; return; }
+    $("resultado").hidden = false;
+    puntuacionAntes = puntuar(tx).total;
+    piezaActiva = null; juez = null;
+    salida.value = "";
+    const piezas = trocear(tx).map((p) => ({ ...p, out: null, ia: null, dudosas: [], hecho: false }));
+    trabajo = { piezas, cola: piezas.map((_, i) => i), modo: "nuevo", estrategia: modo(), tono: tono(), extra: detalles.value.trim() };
+    $("resultado").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    procesar();
+  });
+
+  $("pasada").addEventListener("click", () => {
+    if (ocupado || !salida.value.trim()) return;
+    const piezas = trocear(salida.value).map((p) => ({ ...p, out: p.orig, ia: null, dudosas: [], hecho: false }));
+    trabajo = { piezas, cola: piezas.map((_, i) => i), modo: "pasada", estrategia: "fondo", tono: tono(), extra: "" };
+    procesar();
+  });
+
+  $("seguir").addEventListener("click", () => { if (!ocupado && trabajo) procesar(); });
+  $("parar").addEventListener("click", () => { if (trabajo) trabajo.detener = true; controles.forEach((c) => c.abort()); });
+
+  let tEdit;
+  salida.addEventListener("input", () => {
+    if (ocupado) return;
+    if (trabajo) { trabajo = null; $("seguir").hidden = true; }
+    juez = null;
+    clearTimeout(tEdit); tEdit = setTimeout(pintarSalida, 400);
+  });
+
+  $("pegar").addEventListener("click", async () => {
+    try {
+      const tx = await navigator.clipboard.readText();
+      if (tx) { entrada.value = tx; contar(); return; }
+      throw new Error("vacío");
+    } catch (_) {
+      entrada.focus();
+      entrada.placeholder = "Mantén pulsado aquí y elige Pegar.";
+    }
+  });
+  $("borrar").addEventListener("click", () => { entrada.value = ""; contar(); entrada.focus(); });
+
+  if ("serviceWorker" in navigator && location.protocol === "https:" && !window.claude && /github\.io$/.test(location.hostname)) {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+
+  $("copiar").addEventListener("click", async () => {
+    const b = $("copiar");
+    const tx = salida.value;
+    if (!tx.trim()) return;
+    let ok = false;
+    try { await navigator.clipboard.writeText(tx); ok = true; }
+    catch (_) {
+      salida.focus(); salida.select(); salida.setSelectionRange(0, tx.length);
+      try { ok = document.execCommand("copy"); } catch (__) { ok = false; }
+    }
+    b.textContent = ok ? "Copiado" : "Selecciona y copia";
+    setTimeout(() => { b.textContent = "Copiar"; }, 1800);
+  });
+})();
+</script>
+</body>
+</html>
